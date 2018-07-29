@@ -35,7 +35,7 @@ line_format = ""
 
 #youtube 検索クラス
 class Youtube():
-    def __init__(self,_url,result=200): # m
+    def __init__(self,_url,result=200): # 
         search_url = _url
 
         req = requests.get(search_url)
@@ -219,6 +219,5 @@ if __name__ == '__main__':
         my_markov.make_table(txt)
 
     print("適当にセリフを生成します")
-    my_markov.show_table()
     p = PyJtalk()
     p.say(str(my_markov.generate(time.time())))#しゃべる。
