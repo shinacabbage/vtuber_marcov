@@ -5,9 +5,6 @@ import os
 import chardet
 import random
 import time
-
-import matplotlib.pyplot as plt, librosa, librosa.display, urllib
-
 import MeCab
 from pyjtalk.pyjtalk import PyJtalk
 
@@ -165,6 +162,7 @@ class myMarkov:
 
 if __name__ == '__main__':
 
+    #複数youtubeチャンネルのページから動画のIDをとってくる。
     Y = Youtube("https://www.youtube.com/channel/UC4YaOt1yT-ZeyB0OmxHgolA",result=200)
     Y2 = Youtube("https://www.youtube.com/channel/UCbFwe3COkDrbNsbMyGNCsDg",result=200)
     Y3 = Youtube("https://www.youtube.com/channel/UC4YaOt1yT-ZeyB0OmxHgolA/videos",result=200)
@@ -186,7 +184,7 @@ if __name__ == '__main__':
     line_format =""
     jimaku_count = 0
     for i in ids_:
-        if len(str(i)) <12:#idが11文字以上だとプレイリスト
+        if len(str(i)) <12:#idが11文字以上だとプレイリストのIDなので除外
             r = requests.get('http://video.google.com/timedtext?type=list&v='+i)
             root = ET.fromstring(r.text)
             flg = False
