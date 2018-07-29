@@ -4,16 +4,12 @@ import sys
 import os
 import chardet
 import random
-#from os.path import join, splitext, split
 import time
 
 import matplotlib.pyplot as plt, librosa, librosa.display, urllib
 
 import MeCab
 from pyjtalk.pyjtalk import PyJtalk
-
-
-import time
 
 import concurrent.futures
 
@@ -22,7 +18,6 @@ import unittest
 from scipy import fftpack
 
 import xml.etree.ElementTree as ET
-
 from xml.etree.ElementTree import *
 import requests
 
