@@ -4,13 +4,10 @@ import sys
 import os
 import chardet
 import random
-#import time
 import MeCab
 from pyjtalk.pyjtalk import PyJtalk
 
 import concurrent.futures
-
-#from scipy import fftpack
 
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import *
