@@ -4,15 +4,13 @@ import sys
 import os
 import chardet
 import random
-import time
+#import time
 import MeCab
 from pyjtalk.pyjtalk import PyJtalk
 
 import concurrent.futures
 
-import unittest
-
-from scipy import fftpack
+#from scipy import fftpack
 
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import *
@@ -21,21 +19,19 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 
-# 学習データディレクトリのファイル一覧を取得
-txts = os.listdir('./text')
-
-# 整形済みデータディレクトリのファイルを一覧を取得
-re_txts = os.listdir('./kizuna')
+# 字幕データを入れるディレクトリ
+# なかったら作成する
+txt_path = './kizuna'
+if not os.path.exists(txt_path):
+        os.makedirs(txt_path)
+re_txts = os.listdir(txt_path)#すでにある場合
 
 #　動画番号
 file_count =0;
-line_count =0;
-
-line_format = ""
 
 #youtube 検索クラス
 class Youtube():
-    def __init__(self,_url,result=200): # 
+    def __init__(self,_url,result=200):
         search_url = _url
 
         req = requests.get(search_url)
@@ -79,32 +75,33 @@ class myMarkov:
 
     pn_count=0;
     all_pn_value=0;
-    #rand = Random()
+
     def __init__(self,name):
         self._name = name
-    def wakati(self,text):
+    def wakati(self,text):#わかち書き
         t = MeCab.Tagger("-Owakati")
         m = t.parse(text)
         result = m.rstrip(" \n").split(" ")
         return result
     def make_table(self,file_name):#マルコフ連鎖テーブル作成
-            txt = os.path.join('./kizuna', file_name)
+            txt = os.path.join(txt_path, file_name)
             src = open(txt,"rb").read()
             src = src.decode()
             self.wordlist = self.wakati(src)
             for word in self.wordlist:
-                if self.w1 and self.w2:
-                    if(self.w1,self.w2) not in self.markov:
-                        self.markov[(self.w1,self.w2)]=[]
+                if not word == '\u3000' and not word == 'quot':#除外
+                    if self.w1 and self.w2:
+                        if(self.w1,self.w2) not in self.markov:
+                            self.markov[(self.w1,self.w2)]=[]
                         #print('w1 がマルコフにないよ',self.w1)
                         #print('w2 がマルコフにないよ',self.w2)
-                    self.markov[(self.w1,self.w2)].append(word) #要素のつながりをマルコフに入れとく
-                    #print("w1,w2の組に「"+word+"」を追加するね")
-                self.w1,self.w2 = self.w2,word
-    def show_table(self):
-        #print(self.markov)
-        return self.markov
-    def get_pn_value(self,word):#PNテーブルから極性値をとってくる。該当する単語が見当たらなかったら空白を返す
+                        self.markov[(self.w1,self.w2)].append(word) #要素のつながりをマルコフに入れとく
+                    #print("w1,w2の組に「"+word+"」を追加する")
+                    self.w1,self.w2 = self.w2,word
+    def show_table(self):#マルコフ辞書の中身を確認したい時に
+        print(self.markov)
+        #return self.markov
+    def get_pn_value(self,word):#PNテーブルから該当の単語を検索して、極性値をとってくる。該当する単語が見当たらなかったら空白を返す
         diclist =[]
         src = open('pn_ja.dic',"rb").read()
         src = src.decode()
@@ -117,11 +114,10 @@ class myMarkov:
                     break;
                 d = {'Word':row.split(":")[0], 'Reading':row.split(":")[1], 'POS':row.split(":")[2], 'PN':float(row.split(":")[3])}
                 diclist.append(d)
-                #print(pos)
         values = [x['PN'] for x in diclist if x['Word'] == word]
         value = values[0] if len(values) else ''
         return value
-    def generate(self,seed):#セリフをを自動作成
+    def generate(self):#セリフをを自動作成
         while self.first_word:#文の最初にきてはいけないもの（助詞、助動詞、句読点など）を除外する部分
             w1,w2 = random.choice(list(self.markov.keys()))#辞書の中からランダムに単語を選ぶ
             tmp = random.choice(self.markov[(w1,w2)])
@@ -175,8 +171,8 @@ if __name__ == '__main__':
     movie = Y3.select_all()
     ids.append(movie["id"])
 
-    ids_=[]#複数のチャンネルからの動画のIDを格納する
-    for v in ids:
+    ids_=[]
+    for v in ids:#複数のチャンネルからとった動画のIDを一つに格納する
         for id in v:
             ids_.append(id)
 
@@ -210,14 +206,15 @@ if __name__ == '__main__':
                     line_format =""
     print("サンプル動画全体:"+str(len(ids_)))
     print("うち字幕あり:"+str(jimaku_count))
-
     print("マルコフ連鎖を作るよ")
 
     my_markov = myMarkov("markov")#マルコフクラスを作成
 
+    re_txts = os.listdir(txt_path)#とってきたディレクトリ内のデータを読み込む
     for txt in re_txts:#整形済みディレクトリにあるデータからマルコフテーブルを作る
         my_markov.make_table(txt)
 
+    #my_markov.show_table();
     print("適当にセリフを生成します")
     p = PyJtalk()
-    p.say(str(my_markov.generate(time.time())))#しゃべる。
+    p.say(str(my_markov.generate()))#しゃべる。
