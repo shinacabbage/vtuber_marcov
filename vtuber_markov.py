@@ -87,6 +87,7 @@ class myMarkov:
             self.wordlist = self.wakati(src)
             for word in self.wordlist:
                 if not word == '\u3000' and not word == 'quot':#除外
+                    word.replace('\u3000', '')#一部が全角空白文字で文字化けしている単語を書き換え
                     if self.w1 and self.w2:
                         if(self.w1,self.w2) not in self.markov:
                             self.markov[(self.w1,self.w2)]=[]
