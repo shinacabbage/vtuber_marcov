@@ -60,6 +60,8 @@ class Youtube():
 class myMarkov:
     #_name
     wordlist=""
+    wordlists=[]
+    allwordlists=[]
 
     markov = {}
     w1 = ""
@@ -84,8 +86,14 @@ class myMarkov:
             txt = os.path.join(txt_path, file_name)
             src = open(txt,"rb").read()
             src = src.decode()
-            self.wordlist = self.wakati(src)
-            for word in self.wordlist:
+
+            #改行ごとに分かち書きする
+            srcs = src.split()
+            for src in srcs:
+                self.wordlists.extend(self.wakati(src))
+            self.allwordlists.extend(self.wordlists)
+            #self.wordlist = self.wakati(src)
+            for word in self.wordlists:
                 if not word == '\u3000' and not word == 'quot':#除外
                     word.replace('\u3000', '')#一部が全角空白文字で文字化けしている単語を書き換え
                     if self.w1 and self.w2:
@@ -96,9 +104,12 @@ class myMarkov:
                         self.markov[(self.w1,self.w2)].append(word) #要素のつながりをマルコフに入れとく
                     #print("w1,w2の組に「"+word+"」を追加する")
                     self.w1,self.w2 = self.w2,word
+            self.wordlists=[]
     def show_table(self):#マルコフ辞書の中身を確認したい時に
         print(self.markov)
         #return self.markov
+    def show_wordlist(self):
+        print(self.allwordlists)
     def get_pn_value(self,word):#PNテーブルから該当の単語を検索して、極性値をとってくる。該当する単語が見当たらなかったら空白を返す
         diclist =[]
         src = open('pn_ja.dic',"rb").read()
@@ -117,8 +128,8 @@ class myMarkov:
         return value
     def generate(self):#セリフをを自動作成
         while self.first_word:#文の最初にきてはいけないもの（助詞、助動詞、句読点など）を除外する部分
-            w1,w2 = random.choice(list(self.markov.keys()))#辞書の中からランダムに単語を選ぶ
-            tmp = random.choice(self.markov[(w1,w2)])
+            w1,w2 = random.choice(list(self.markov.keys()))#辞書の中からランダムにkeyを選ぶ
+            tmp = random.choice(self.markov[(w1,w2)])#対応するvalueをランダムに選ぶ
             m = MeCab.Tagger("-Ochasen")
             keywords = m.parse(tmp)
             for row in keywords.split("\n"):
@@ -209,10 +220,15 @@ if __name__ == '__main__':
     my_markov = myMarkov("markov")#マルコフクラスを作成
 
     re_txts = os.listdir(txt_path)#とってきたディレクトリ内のデータを読み込む
+
+    count=1#ファイルのカウント
     for txt in re_txts:#整形済みディレクトリにあるデータからマルコフテーブルを作る
         my_markov.make_table(txt)
+        print(str(len(re_txts))+"個中"+str(count)+"個終了")
+        count+=1
 
     #my_markov.show_table();
+    #my_markov.show_wordlist()
     print("適当にセリフを生成します")
     p = PyJtalk()
     p.say(str(my_markov.generate()))#しゃべる。
